@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>de.frixxx.raycastmonitor</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string><pathToMacToolsBin>/raycast_monitor</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>3600</integer>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/raycastmem.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/raycastmem.err</string>
+</dict>
+</plist>

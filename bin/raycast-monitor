@@ -1,0 +1,75 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# ===================== CONFIGURATION =====================
+readonly RAYCAST_MONITOR_DIR="${HOME}/.config/fx/raycast-monitor"
+
+if [ ! -d "${RAYCAST_MONITOR_DIR}" ]; then
+    echo "Directory '${RAYCAST_MONITOR_DIR}' missing. Create directory to get things started."
+    exit 1
+fi
+
+if [ -f "${RAYCAST_MONITOR_DIR}/.env" ]; then
+    source "${RAYCAST_MONITOR_DIR}/.env"
+fi
+
+readonly APP_NAME="${RAYCAST_MONITOR___APP_NAME:-Raycast}"
+readonly LOG_FILE="${RAYCAST_MONITOR_DIR}/raycast-monitor.log"
+readonly MEM_THRESHOLD_MB="${RAYCAST_MONITOR___MEM_THRESHOLD_MB:-500}"
+
+# Get raycast pid
+get_app_pid() {
+    pgrep -x "$APP_NAME" || true
+}
+
+# Log process
+log_info() {
+    local msg="$1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $msg" >> "$LOG_FILE"
+}
+
+# Send Notification
+send_notification() {
+  local message="${1}"
+  osascript -e "display notification \"${message}\" with title \"Raycast Monitor\""
+}
+
+# Get memeory usage
+get_memory_mb() {
+    local pid="$1"
+    local mem_kb
+    mem_kb=$(ps -o rss= -p "$pid")
+    echo $((mem_kb / 1024))
+}
+
+# Restart Raycast
+restart_app() {
+    #local pid="$1"
+    #kill "$pid" 2>/dev/null || true
+    #sleep 1
+    #open -a "$APP_NAME"
+    send_notification "${APP_NAME} has been restarted due to high memory usage."
+}
+
+
+# ===================== MAIN PROCEDURE =====================
+
+app_pid=$(get_app_pid)
+
+if [ -z "$app_pid" ]; then
+    log_info "$APP_NAME is not running"
+    exit 0
+fi
+echo "APP-PID: ${app_pid}"
+
+mem_mb=$(get_memory_mb "$app_pid")
+log_info "Current Memory Usage of '${APP_NAME}' (MB): ${mem_mb}MB"
+echo "Memory Usage (MB): ${mem_mb}"
+
+if [ "$mem_mb" -gt "$MEM_THRESHOLD_MB" ]; then
+    log_info "Memory usage of '${APP_NAME}' is higher then Threshold (${mem_mb}MB > ${MEM_THRESHOLD_MB}MB)，Neustart ${APP_NAME}"
+    restart_app "$app_pid"
+fi
+
+exit 0
